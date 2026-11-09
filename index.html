@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>เช็คชื่อหน้าเสาธง ม.6/8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1c2b45; --muted:#5d6b82; --paper:#f4f6f9; --card:#fff; --line:#d9dfe8;
+  --green:#2b7a4b; --amber:#b36b00; --red:#c4262e; --redbg:#fdecec; --blue:#2a56a5; --gray:#6b7480;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Noto Sans Thai',system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.6}
+header{background:var(--ink);color:#fff;padding:14px 16px}
+header h1{margin:0;font-size:1.15rem;font-weight:700}
+header p{margin:0;font-size:.85rem;opacity:.8}
+main{max-width:860px;margin:0 auto;padding:16px}
+nav{display:flex;gap:6px;margin-bottom:14px}
+nav button{flex:1;padding:10px;border:1px solid var(--line);background:var(--card);font:inherit;cursor:pointer;border-radius:6px;color:var(--muted)}
+nav button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:14px}
+input,textarea,button{font:inherit}
+input[type=date],input[type=password],textarea{border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%}
+textarea{min-height:140px}
+.btn{background:var(--blue);color:#fff;border:0;border-radius:6px;padding:9px 16px;cursor:pointer}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.5}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.bar input[type=date]{width:auto}
+.alert{border:1px solid var(--red);background:var(--redbg);color:var(--red);border-radius:8px;padding:12px 14px;margin-bottom:14px}
+.alert b{display:block;margin-bottom:4px}
+.row{display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;padding:8px 6px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row.risk{background:var(--redbg);border-left:4px solid var(--red)}
+.row.risk .nm{color:var(--red);font-weight:700}
+.warn{display:block;font-size:.8rem;color:var(--red);font-weight:500}
+.num{color:var(--muted);text-align:right}
+.seg{display:flex;gap:4px}
+.seg button{border:1px solid var(--line);background:#fff;border-radius:6px;padding:5px 10px;cursor:pointer;min-width:42px}
+.seg button.present.on{background:var(--green);border-color:var(--green);color:#fff}
+.seg button.late.on{background:var(--amber);border-color:var(--amber);color:#fff}
+.seg button.absent.on{background:var(--red);border-color:var(--red);color:#fff}
+.seg button.leave.on{background:var(--gray);border-color:var(--gray);color:#fff}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:center}
+th:nth-child(2),td:nth-child(2){text-align:left}
+tr.risk td{background:var(--redbg);color:var(--red);font-weight:700}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;display:none;max-width:90%;z-index:9}
+#toast.bad{background:var(--red)}
+.hide{display:none}
+.stu{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)}
+.stu button{border:0;background:none;color:var(--red);cursor:pointer}
+@media (max-width:520px){.row{grid-template-columns:28px 1fr}.row .seg{grid-column:1/-1}.seg button{flex:1}}
+</style>
+</head>
+<body>
+<header>
+  <h1>เช็คชื่อกิจกรรมหน้าเสาธง ชั้น ม.6/8</h1>
+  <p>เป้าหมายเข้าร่วมไม่น้อยกว่าร้อยละ 90</p>
+</header>
+
+<main>
+  <section id="login" class="card">
+    <p>กรอกรหัสผ่านครูเพื่อเข้าใช้งาน</p>
+    <div class="bar">
+      <input type="password" id="pin" placeholder="รหัสผ่าน" style="max-width:240px">
+      <button class="btn" id="loginBtn">เข้าสู่ระบบ</button>
+    </div>
+  </section>
+
+  <div id="app" class="hide">
+    <nav>
+      <button data-tab="check" class="on">เช็คชื่อ</button>
+      <button data-tab="report">สรุปรายบุคคล</button>
+      <button data-tab="manage">จัดการรายชื่อ</button>
+    </nav>
+
+    <section id="tab-check">
+      <div id="riskBanner"></div>
+      <div class="card">
+        <div class="bar">
+          <input type="date" id="date">
+          <button class="btn ghost" id="allPresent">ทุกคนมา</button>
+          <button class="btn" id="save">บันทึก</button>
+        </div>
+        <div id="list"></div>
+      </div>
+    </section>
+
+    <section id="tab-report" class="hide">
+      <div class="card">
+        <p style="margin-top:0;color:var(--muted)">สาย + ขาด รวมตั้งแต่ <span id="th"></span> ครั้ง แสดงเป็นสีแดง เสี่ยงโดนหักคะแนน</p>
+        <div style="overflow-x:auto"><table id="report"></table></div>
+      </div>
+    </section>
+
+    <section id="tab-manage" class="hide">
+      <div class="card">
+        <p style="margin-top:0">วางรายชื่อ 1 คนต่อ 1 บรรทัด รูปแบบ <b>เลขที่ ชื่อ-สกุล</b></p>
+        <textarea id="bulk" placeholder="1 สมชาย ใจดี&#10;2 สมหญิง รักเรียน"></textarea>
+        <div class="bar" style="margin-top:10px"><button class="btn" id="addBtn">เพิ่มรายชื่อ</button></div>
+      </div>
+      <div class="card" id="stuList"></div>
+    </section>
+  </div>
+</main>
+<div id="toast"></div>
+
+<script>
+// จำนวนครั้ง (สาย + ขาด) ที่ถือว่าเสี่ยงโดนหักคะแนน ปรับได้ที่นี่
+const THRESHOLD = 2;
+const STATUS = [['present','มา'],['late','สาย'],['absent','ขาด'],['leave','ลา']];
+
+let pin = sessionStorage.getItem('pin') || '';
+let students = [], summary = {}, saved = {}, current = {};
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const isBad = (st) => st === 'late' || st === 'absent';
+
+function toast(msg, bad){
+  const t = $('toast'); t.textContent = msg; t.className = bad ? 'bad' : '';
+  t.style.display = 'block'; clearTimeout(toast.t); toast.t = setTimeout(() => t.style.display = 'none', 3500);
+}
+
+async function api(path, opts = {}){
+  const r = await fetch(path, { ...opts, headers: { 'Content-Type': 'application/json', 'x-admin-pin': pin } });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || 'เกิดข้อผิดพลาด');
+  return d;
+}
+
+// จำนวนสาย+ขาดสะสม รวมค่าที่กำลังเลือกในหน้าจอ
+function count(id){
+  const s = summary[id] || { late: 0, absent: 0 };
+  return s.late + s.absent - (isBad(saved[id]) ? 1 : 0) + (isBad(current[id]) ? 1 : 0);
+}
+
+async function loadSummary(){
+  const rows = await api('/api/attendance?summary=1');
+  summary = {}; rows.forEach((r) => summary[r.student_id] = r);
+}
+async function loadStudents(){ students = await api('/api/students'); }
+async function loadDate(){
+  const rows = await api('/api/attendance?date=' + $('date').value);
+  saved = {}; rows.forEach((r) => saved[r.student_id] = r.status);
+  current = { ...saved };
+  renderList();
+}
+
+function renderList(){
+  if (!students.length){ $('list').innerHTML = '<p>ยังไม่มีรายชื่อ ไปที่แท็บ "จัดการรายชื่อ" เพื่อเพิ่ม</p>'; $('riskBanner').innerHTML = ''; return; }
+  $('list').innerHTML = students.map((s) => {
+    const n = count(s.id), risk = n >= THRESHOLD;
+    return `<div class="row ${risk ? 'risk' : ''}">
+      <span class="num">${esc(s.number ?? '')}</span>
+      <span><span class="nm">${esc(s.name)}</span>${risk ? `<span class="warn">สาย/ขาดสะสม ${n} ครั้ง: เสี่ยงโดนหักคะแนน</span>` : ''}</span>
+      <span class="seg">${STATUS.map(([k, t]) => `<button class="${k} ${current[s.id] === k ? 'on' : ''}" data-id="${s.id}" data-st="${k}">${t}</button>`).join('')}</span>
+    </div>`;
+  }).join('');
+  renderBanner();
+}
+
+function renderBanner(){
+  const risky = students.filter((s) => count(s.id) >= THRESHOLD);
+  $('riskBanner').innerHTML = risky.length
+    ? `<div class="alert"><b>แจ้งเตือน: มี ${risky.length} คนเสี่ยงโดนหักคะแนน</b>${risky.map((s) => `${esc(s.name)} (${count(s.id)} ครั้ง)`).join(', ')}</div>`
+    : '';
+}
+
+function renderReport(){
+  $('th').textContent = THRESHOLD;
+  const head = '<tr><th>เลขที่</th><th>ชื่อ</th><th>มา</th><th>สาย</th><th>ขาด</th><th>ลา</th><th>ร้อยละมา</th></tr>';
+  const body = students.map((s) => {
+    const m = summary[s.id] || { present: 0, late: 0, absent: 0, leave: 0, total: 0 };
+    const pct = m.total ? Math.round(((m.present + m.late) / m.total) * 100) + '%' : '-';
+    const risk = m.late + m.absent >= THRESHOLD;
+    return `<tr class="${risk ? 'risk' : ''}"><td>${esc(s.number ?? '')}</td><td>${esc(s.name)}${risk ? ' (เสี่ยงโดนหักคะแนน)' : ''}</td><td>${m.present}</td><td>${m.late}</td><td>${m.absent}</td><td>${m.leave}</td><td>${pct}</td></tr>`;
+  }).join('');
+  $('report').innerHTML = head + body;
+}
+
+function renderManage(){
+  $('stuList').innerHTML = students.length
+    ? students.map((s) => `<div class="stu"><span>${esc(s.number ?? '')} ${esc(s.name)}</span><button data-del="${s.id}">ลบ</button></div>`).join('')
+    : 'ยังไม่มีรายชื่อ';
+}
+
+async function loadAll(){
+  await Promise.all([loadStudents(), loadSummary()]);
+  renderReport(); renderManage();
+  await loadDate();
+}
+
+// ---------- events ----------
+$('list').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-id]'); if (!b) return;
+  const id = Number(b.dataset.id), before = count(id);
+  current[id] = b.dataset.st;
+  const after = count(id);
+  renderList();
+  if (before < THRESHOLD && after >= THRESHOLD){
+    const s = students.find((x) => x.id === id);
+    toast(`${s.name} สาย/ขาดครบ ${after} ครั้ง เสี่ยงโดนหักคะแนน`, true);
+  }
+});
+
+$('allPresent').onclick = () => { students.forEach((s) => current[s.id] = 'present'); renderList(); };
+
+$('save').onclick = async () => {
+  const records = students.filter((s) => current[s.id]).map((s) => ({ student_id: s.id, status: current[s.id] }));
+  if (!records.length) return toast('ยังไม่ได้เลือกสถานะนักเรียน', true);
+  $('save').disabled = true;
+  try {
+    await api('/api/attendance', { method: 'POST', body: JSON.stringify({ date: $('date').value, records }) });
+    await loadSummary(); saved = { ...current };
+    renderList(); renderReport();
+    toast('บันทึกเรียบร้อย');
+  } catch (e) { toast(e.message, true); }
+  $('save').disabled = false;
+};
+
+$('date').onchange = () => loadDate().catch((e) => toast(e.message, true));
+
+$('addBtn').onclick = async () => {
+  const list = $('bulk').value.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => {
+    const m = l.match(/^(\d+)[\s.)-]+(.+)$/);
+    return m ? { number: m[1], name: m[2] } : { number: null, name: l };
+  });
+  try {
+    await api('/api/students', { method: 'POST', body: JSON.stringify({ students: list }) });
+    $('bulk').value = ''; await loadAll(); toast('เพิ่มรายชื่อแล้ว');
+  } catch (e) { toast(e.message, true); }
+};
+
+$('stuList').addEventListener('click', async (e) => {
+  const id = e.target.dataset.del; if (!id) return;
+  if (!confirm('ลบนักเรียนคนนี้และประวัติการเช็คชื่อทั้งหมดของเขา?')) return;
+  try { await api('/api/students?id=' + id, { method: 'DELETE' }); await loadAll(); } catch (er) { toast(er.message, true); }
+});
+
+document.querySelector('nav').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  document.querySelectorAll('nav button').forEach((x) => x.classList.toggle('on', x === b));
+  ['check', 'report', 'manage'].forEach((t) => $('tab-' + t).classList.toggle('hide', t !== b.dataset.tab));
+});
+
+async function start(){
+  $('date').value = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD ตามเวลาเครื่อง
+  try {
+    await loadAll();
+    $('login').classList.add('hide'); $('app').classList.remove('hide');
+  } catch (e) {
+    sessionStorage.removeItem('pin'); $('login').classList.remove('hide'); $('app').classList.add('hide');
+    if (pin) toast(e.message, true);
+  }
+}
+$('loginBtn').onclick = () => { pin = $('pin').value; sessionStorage.setItem('pin', pin); start(); };
+$('pin').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('loginBtn').click(); });
+if (pin) start();
+</script>
+</body>
+</html>
