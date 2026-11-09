@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>เช็คชื่อหน้าเสาธง ม.6/8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1c2b45; --muted:#5d6b82; --paper:#f4f6f9; --card:#fff; --line:#d9dfe8;
+  --green:#2b7a4b; --amber:#b36b00; --red:#c4262e; --redbg:#fdecec; --blue:#2a56a5; --gray:#6b7480;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Noto Sans Thai',system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.6}
+header{background:var(--ink);color:#fff;padding:14px 16px}
+header h1{margin:0;font-size:1.15rem;font-weight:700}
+header p{margin:0;font-size:.85rem;opacity:.8}
+main{max-width:860px;margin:0 auto;padding:16px}
+nav{display:flex;gap:6px;margin-bottom:14px}
+nav button{flex:1;padding:10px;border:1px solid var(--line);background:var(--card);font:inherit;cursor:pointer;border-radius:6px;color:var(--muted)}
+nav button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:14px}
+input,textarea,button{font:inherit}
+input[type=date],input[type=password],textarea{border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%}
+textarea{min-height:140px}
+.btn{background:var(--blue);color:#fff;border:0;border-radius:6px;padding:9px 16px;cursor:pointer}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.5}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.bar input[type=date]{width:auto}
+.alert{border:1px solid var(--red);background:var(--redbg);color:var(--red);border-radius:8px;padding:12px 14px;margin-bottom:14px}
+.alert b{display:block;margin-bottom:4px}
+.row{display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;padding:8px 6px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row.risk{background:var(--redbg);border-left:4px solid var(--red)}
+.row.risk .nm{color:var(--red);font-weight:700}
+.warn{display:block;font-size:.8rem;color:var(--red);font-weight:500}
+.num{color:var(--muted);text-align:right}
+.seg{display:flex;gap:4px}
+.seg button{border:1px solid var(--line);background:#fff;border-radius:6px;padding:5px 10px;cursor:pointer;min-width:42px}
+.seg button.present.on{background:var(--green);border-color:var(--green);color:#fff}
+.seg button.late.on{background:var(--amber);border-color:var(--amber);color:#fff}
+.seg button.absent.on{background:var(--red);border-color:var(--red);color:#fff}
+.seg button.leave.on{background:var(--gray);border-color:var(--gray);color:#fff}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:center}
+th:nth-child(2),td:nth-child(2){text-align:left}
+tr.risk td{background:var(--redbg);color:var(--red);font-weight:700}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;display:none;max-width:90%;z-index:60}
+#toast.bad{background:var(--red)}
+.hide{display:none}
+.stu{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)}
+.stu button{border:0;background:none;color:var(--red);cursor:pointer}
+@media (max-width:520px){.row{grid-template-columns:28px 1fr}.row .seg{grid-column:1/-1}.seg button{flex:1}}
+
+/* ===== หน้าแรก (landing) ===== */
+body.lp-on{overflow:hidden}
+#landing{--u:min(calc(100vw/1600),calc(100vh/900));position:fixed;inset:0;z-index:50;background:#02030a;color:#f5efe2;transition:opacity .8s ease}
+#landing.gone{opacity:0;pointer-events:none}
+#lpCanvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.lp-vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.78) 100%)}
+.lp-ui{position:absolute;inset:0;pointer-events:none;animation:lpIn 1.6s ease .3s both}
+@keyframes lpIn{from{opacity:0}}
+.lp-ui button{pointer-events:auto;font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.lp-top{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;justify-content:space-between;padding:calc(24*var(--u)) calc(44*var(--u)) 0}
+.lp-logo{font-size:calc(28*var(--u));font-weight:700}
+.lp-nav{display:flex;align-items:center;gap:calc(36*var(--u));font-size:calc(16*var(--u));font-weight:500}
+.lp-nav button:not(.lp-pill){transition:opacity .2s}
+.lp-nav button:not(.lp-pill):hover{opacity:.6}
+.lp-nav .lp-pill{background:#f5efe2;color:#151510;height:calc(46*var(--u));padding:0 calc(26*var(--u));border-radius:99px;transition:transform .25s}
+.lp-nav .lp-pill:hover{transform:translateY(-1px)}
+.lp-hero{position:absolute;left:0;right:0;top:50%;transform:translateY(-46%);display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 20px}
+.lp-hero h1{margin:0;font-weight:700;font-size:calc(128*var(--u));line-height:1.25;white-space:nowrap;text-shadow:0 0 40px rgba(0,0,0,.6)}
+.lp-hero p{margin:calc(28*var(--u)) 0 0;font-size:calc(21*var(--u));line-height:1.55}
+.lp-ui .lp-go{display:grid;place-items:center;margin-top:calc(34*var(--u));width:calc(58*var(--u));height:calc(58*var(--u));min-width:44px;min-height:44px;border:1.5px solid #f5efe2;border-radius:50%;transition:background .3s,color .3s}
+.lp-ui .lp-go:hover{background:#f5efe2;color:#151510}
+.lp-go svg{width:calc(22*var(--u));height:calc(22*var(--u));min-width:18px;min-height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.lp-corner{position:absolute;right:calc(44*var(--u));bottom:calc(44*var(--u));font-size:calc(14*var(--u));opacity:.8}
+.lp-ui button:focus-visible{outline:2px solid #f5efe2;outline-offset:3px}
+@media (max-width:820px){
+  #landing{--u:1px}
+  .lp-top{padding:18px 18px 0}
+  .lp-nav button:not(.lp-pill){display:none}
+  .lp-nav .lp-pill{height:40px;font-size:14px}
+  .lp-hero h1{font-size:clamp(44px,13vw,80px);white-space:normal}
+  .lp-hero p{font-size:16px}
+  .lp-corner{left:0;right:0;bottom:30px;text-align:center;font-size:13px}
+}
+@media (prefers-reduced-motion:reduce){.lp-ui{animation:none}}
+</style>
+</head>
+<body class="lp-on">
+<div id="landing">
+  <canvas id="lpCanvas" aria-hidden="true"></canvas>
+  <div class="lp-vig"></div>
+  <div class="lp-ui">
+    <div class="lp-top">
+      <span class="lp-logo">ม.6/8</span>
+      <div class="lp-nav">
+        <button data-go="check">เช็คชื่อ</button>
+        <button data-go="report">สรุป</button>
+        <button data-go="manage">รายชื่อ</button>
+        <button class="lp-pill" data-go="check">เริ่มเช็คชื่อ</button>
+      </div>
+    </div>
+    <div class="lp-hero">
+      <h1>ตรงเวลา สร้างวินัย</h1>
+      <p>กิจกรรมหน้าเสาธง ชั้น ม.6/8<br>เป้าหมายเข้าร่วมไม่น้อยกว่าร้อยละ 90</p>
+      <button class="lp-go" id="lpGo" data-go="check" aria-label="เข้าสู่ระบบเช็คชื่อ"><svg viewBox="0 0 24 24"><path d="M4 12h16M14 6l6 6-6 6"/></svg></button>
+    </div>
+    <div class="lp-corner">เลื่อนเพื่อเดินชมหุบเขา</div>
+  </div>
+</div>
+<header style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+  <div>
+    <h1>เช็คชื่อกิจกรรมหน้าเสาธง ชั้น ม.6/8</h1>
+    <p>เป้าหมายเข้าร่วมไม่น้อยกว่าร้อยละ 90</p>
+  </div>
+  <button class="btn ghost" id="homeBtn">หน้าแรก</button>
+</header>
+
+<main>
+  <div id="app">
+    <nav>
+      <button data-tab="check" class="on">เช็คชื่อ</button>
+      <button data-tab="report">สรุปรายบุคคล</button>
+      <button data-tab="manage">จัดการรายชื่อ</button>
+    </nav>
+
+    <section id="tab-check">
+      <div id="riskBanner"></div>
+      <div class="card">
+        <div class="bar">
+          <input type="date" id="date">
+          <button class="btn ghost" id="allPresent">ทุกคนมา</button>
+          <button class="btn" id="save">บันทึก</button>
+        </div>
+        <div id="list"></div>
+      </div>
+    </section>
+
+    <section id="tab-report" class="hide">
+      <div class="card">
+        <p style="margin-top:0;color:var(--muted)">สาย + ขาด รวมตั้งแต่ <span id="th"></span> ครั้ง แสดงเป็นสีแดง เสี่ยงโดนหักคะแนน</p>
+        <div style="overflow-x:auto"><table id="report"></table></div>
+      </div>
+    </section>
+
+    <section id="tab-manage" class="hide">
+      <div class="card">
+        <p style="margin-top:0">วางรายชื่อ 1 คนต่อ 1 บรรทัด รูปแบบ <b>เลขที่ ชื่อ-สกุล</b></p>
+        <textarea id="bulk" placeholder="1 สมชาย ใจดี&#10;2 สมหญิง รักเรียน"></textarea>
+        <div class="bar" style="margin-top:10px"><button class="btn" id="addBtn">เพิ่มรายชื่อ</button></div>
+      </div>
+      <div class="card" id="stuList"></div>
+    </section>
+  </div>
+</main>
+<div id="toast"></div>
+
+<script>
+// จำนวนครั้ง (สาย + ขาด) ที่ถือว่าเสี่ยงโดนหักคะแนน ปรับได้ที่นี่
+const THRESHOLD = 2;
+const STATUS = [['present','มา'],['late','สาย'],['absent','ขาด'],['leave','ลา']];
+
+let students = [], summary = {}, saved = {}, current = {};
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const isBad = (st) => st === 'late' || st === 'absent';
+
+function toast(msg, bad){
+  const t = $('toast'); t.textContent = msg; t.className = bad ? 'bad' : '';
+  t.style.display = 'block'; clearTimeout(toast.t); toast.t = setTimeout(() => t.style.display = 'none', 3500);
+}
+
+async function api(path, opts = {}){
+  const r = await fetch(path, { ...opts, headers: { 'Content-Type': 'application/json' } });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || 'เกิดข้อผิดพลาด');
+  return d;
+}
+
+// จำนวนสาย+ขาดสะสม รวมค่าที่กำลังเลือกในหน้าจอ
+function count(id){
+  const s = summary[id] || { late: 0, absent: 0 };
+  return s.late + s.absent - (isBad(saved[id]) ? 1 : 0) + (isBad(current[id]) ? 1 : 0);
+}
+
+async function loadSummary(){
+  const rows = await api('/api/attendance?summary=1');
+  summary = {}; rows.forEach((r) => summary[r.student_id] = r);
+}
+async function loadStudents(){ students = await api('/api/students'); }
+async function loadDate(){
+  const rows = await api('/api/attendance?date=' + $('date').value);
+  saved = {}; rows.forEach((r) => saved[r.student_id] = r.status);
+  current = { ...saved };
+  renderList();
+}
+
+function renderList(){
+  if (!students.length){ $('list').innerHTML = '<p>ยังไม่มีรายชื่อ ไปที่แท็บ "จัดการรายชื่อ" เพื่อเพิ่ม</p>'; $('riskBanner').innerHTML = ''; return; }
+  $('list').innerHTML = students.map((s) => {
+    const n = count(s.id), risk = n >= THRESHOLD;
+    return `<div class="row ${risk ? 'risk' : ''}">
+      <span class="num">${esc(s.number ?? '')}</span>
+      <span><span class="nm">${esc(s.name)}</span>${risk ? `<span class="warn">สาย/ขาดสะสม ${n} ครั้ง: เสี่ยงโดนหักคะแนน</span>` : ''}</span>
+      <span class="seg">${STATUS.map(([k, t]) => `<button class="${k} ${current[s.id] === k ? 'on' : ''}" data-id="${s.id}" data-st="${k}">${t}</button>`).join('')}</span>
+    </div>`;
+  }).join('');
+  renderBanner();
+}
+
+function renderBanner(){
+  const risky = students.filter((s) => count(s.id) >= THRESHOLD);
+  $('riskBanner').innerHTML = risky.length
+    ? `<div class="alert"><b>แจ้งเตือน: มี ${risky.length} คนเสี่ยงโดนหักคะแนน</b>${risky.map((s) => `${esc(s.name)} (${count(s.id)} ครั้ง)`).join(', ')}</div>`
+    : '';
+}
+
+function renderReport(){
+  $('th').textContent = THRESHOLD;
+  const head = '<tr><th>เลขที่</th><th>ชื่อ</th><th>มา</th><th>สาย</th><th>ขาด</th><th>ลา</th><th>ร้อยละมา</th></tr>';
+  const body = students.map((s) => {
+    const m = summary[s.id] || { present: 0, late: 0, absent: 0, leave: 0, total: 0 };
+    const pct = m.total ? Math.round(((m.present + m.late) / m.total) * 100) + '%' : '-';
+    const risk = m.late + m.absent >= THRESHOLD;
+    return `<tr class="${risk ? 'risk' : ''}"><td>${esc(s.number ?? '')}</td><td>${esc(s.name)}${risk ? ' (เสี่ยงโดนหักคะแนน)' : ''}</td><td>${m.present}</td><td>${m.late}</td><td>${m.absent}</td><td>${m.leave}</td><td>${pct}</td></tr>`;
+  }).join('');
+  $('report').innerHTML = head + body;
+}
+
+function renderManage(){
+  $('stuList').innerHTML = students.length
+    ? students.map((s) => `<div class="stu"><span>${esc(s.number ?? '')} ${esc(s.name)}</span><button data-del="${s.id}">ลบ</button></div>`).join('')
+    : 'ยังไม่มีรายชื่อ';
+}
+
+async function loadAll(){
+  await Promise.all([loadStudents(), loadSummary()]);
+  renderReport(); renderManage();
+  await loadDate();
+}
+
+// ---------- events ----------
+$('list').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-id]'); if (!b) return;
+  const id = Number(b.dataset.id), before = count(id);
+  current[id] = b.dataset.st;
+  const after = count(id);
+  renderList();
+  if (before < THRESHOLD && after >= THRESHOLD){
+    const s = students.find((x) => x.id === id);
+    toast(`${s.name} สาย/ขาดครบ ${after} ครั้ง เสี่ยงโดนหักคะแนน`, true);
+  }
+});
+
+$('allPresent').onclick = () => { students.forEach((s) => current[s.id] = 'present'); renderList(); };
+
+$('save').onclick = async () => {
+  const records = students.filter((s) => current[s.id]).map((s) => ({ student_id: s.id, status: current[s.id] }));
+  if (!records.length) return toast('ยังไม่ได้เลือกสถานะนักเรียน', true);
+  $('save').disabled = true;
+  try {
+    await api('/api/attendance', { method: 'POST', body: JSON.stringify({ date: $('date').value, records }) });
+    await loadSummary(); saved = { ...current };
+    renderList(); renderReport();
+    toast('บันทึกเรียบร้อย');
+  } catch (e) { toast(e.message, true); }
+  $('save').disabled = false;
+};
+
+$('date').onchange = () => loadDate().catch((e) => toast(e.message, true));
+
+$('addBtn').onclick = async () => {
+  const list = $('bulk').value.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => {
+    const m = l.match(/^(\d+)[\s.)-]+(.+)$/);
+    return m ? { number: m[1], name: m[2] } : { number: null, name: l };
+  });
+  try {
+    await api('/api/students', { method: 'POST', body: JSON.stringify({ students: list }) });
+    $('bulk').value = ''; await loadAll(); toast('เพิ่มรายชื่อแล้ว');
+  } catch (e) { toast(e.message, true); }
+};
+
+$('stuList').addEventListener('click', async (e) => {
+  const id = e.target.dataset.del; if (!id) return;
+  if (!confirm('ลบนักเรียนคนนี้และประวัติการเช็คชื่อทั้งหมดของเขา?')) return;
+  try { await api('/api/students?id=' + id, { method: 'DELETE' }); await loadAll(); } catch (er) { toast(er.message, true); }
+});
+
+document.querySelector('nav').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  document.querySelectorAll('nav button').forEach((x) => x.classList.toggle('on', x === b));
+  ['check', 'report', 'manage'].forEach((t) => $('tab-' + t).classList.toggle('hide', t !== b.dataset.tab));
+});
+
+async function start(){
+  $('date').value = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD ตามเวลาเครื่อง
+  try { await loadAll(); } catch (e) { toast(e.message, true); }
+}
+start();
+
+// ===== หน้าแรก: หุบเขาดอกไม้เรืองแสง (วาดด้วย canvas) =====
+(function(){
+  const L = document.getElementById('landing'), cv = document.getElementById('lpCanvas'), ctx = cv.getContext('2d');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const COL = [[255,120,190],[175,130,255],[110,220,255],[255,190,110],[235,235,255],[70,190,150]];
+  const sprites = COL.map((c) => {
+    const s = document.createElement('canvas'); s.width = s.height = 64;
+    const g = s.getContext('2d'), r = g.createRadialGradient(32,32,0,32,32,32), rgb = c.join(',');
+    r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(.15, `rgba(${rgb},.95)`);
+    r.addColorStop(.5, `rgba(${rgb},.25)`); r.addColorStop(1, `rgba(${rgb},0)`);
+    g.fillStyle = r; g.fillRect(0,0,64,64); return s;
+  });
+  const ZF = 34, ZN = 0.55, CH = 1.1;
+  const rnd = (a,b) => a + Math.random()*(b-a);
+  let W=0, H=0, dpr=1, bg=null, fl=[], dust=[];
+  let speed=1, speedT=1, boost=0, disp=0, dispT=0, mx=-9999, my=-9999, tx=0, ty=0;
+  let raf=0, last=0, t=0, running=false, stopTimer=0;
+
+  function spawn(f, anywhere){
+    f.x = rnd(-15,15); f.z = anywhere ? rnd(ZN,ZF) : rnd(ZF-6,ZF);
+    f.e = Math.abs(f.x)*.12 + Math.sin(f.x*.5)*.3 + rnd(-.12,.12); // ความสูงของพื้นที่ (เป็นรูปหุบเขา)
+    f.c = Math.random()<.2 ? 5 : Math.floor(Math.random()*5);
+    f.s = rnd(.5,1.2); f.p = rnd(0,6.28); f.ox = rnd(-1,1); f.oy = rnd(-1,1);
+    return f;
+  }
+
+  function resize(){
+    dpr = Math.min(window.devicePixelRatio||1, 2);
+    W = L.clientWidth; H = L.clientHeight;
+    cv.width = W*dpr; cv.height = H*dpr;
+    // พื้นหลังท้องฟ้ายามค่ำ + ดาว วาดครั้งเดียว
+    bg = document.createElement('canvas'); bg.width = W; bg.height = H;
+    const g = bg.getContext('2d'), hy = H*.42;
+    const sky = g.createLinearGradient(0,0,0,H);
+    sky.addColorStop(0,'#03040c'); sky.addColorStop(hy/H,'#1c1745'); sky.addColorStop(hy/H+.001,'#05060f'); sky.addColorStop(1,'#02030a');
+    g.fillStyle = sky; g.fillRect(0,0,W,H);
+    const glow = g.createRadialGradient(W/2,hy,0,W/2,hy,W*.5);
+    glow.addColorStop(0,'rgba(120,90,220,.35)'); glow.addColorStop(1,'rgba(120,90,220,0)');
+    g.fillStyle = glow; g.fillRect(0,0,W,H);
+    for (let i=0;i<90;i++){ g.fillStyle = `rgba(255,255,255,${rnd(.25,.9)})`; const r = rnd(.6,1.5); g.fillRect(rnd(0,W), rnd(0,hy*.95), r, r); }
+    const N = W < 820 ? 650 : 1300;
+    while (fl.length < N) fl.push(spawn({}, true));
+    fl.length = N;
+    dust = Array.from({length: 70}, () => ({x:rnd(0,W), y:rnd(0,H), vx:rnd(-6,6), vy:rnd(-8,-1), r:rnd(2,6), a:rnd(.15,.5)}));
+  }
+
+  function frame(now){
+    raf = requestAnimationFrame(frame);
+    const dt = Math.min(.05, (now-last)/1000 || 0); last = now; t += dt;
+    boost *= Math.pow(.25, dt);
+    speed += (speedT*(1+boost) - speed) * Math.min(1, dt*3);
+    disp  += (dispT - disp) * Math.min(1, dt*2.5);
+    const k = Math.min(1, dt*3);
+    tx += ((mx>-999 ? (mx-W/2) : 0)*.03 - tx) * k;
+    ty += ((my>-999 ? (my-H/2) : 0)*.015 - ty) * k;
+
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+    ctx.drawImage(bg,0,0,W,H);
+    ctx.globalCompositeOperation = 'lighter';
+
+    const f = H*.7, cx = W/2 - tx, hy = H*.42 - ty, R = 150, vz = speed*dt*(reduce ? .3 : 2.2);
+    for (const o of fl){
+      o.z -= vz;
+      if (o.z < ZN) spawn(o, false);
+      const z = o.z;
+      let sx = cx + o.x/z*f*.9, sy = hy + (CH - o.e)/z*f;
+      const bloom = Math.max(.15, Math.min(1, (20-z)/14));
+      let a = Math.min(1,(ZF-z)/10) * Math.min(1,z/1.2) * (.55+.45*bloom) * (1 - z/ZF*.6);
+      let size = Math.min(200, f/z*.05*o.s*bloom*3);
+      // เมาส์ผลักจุดออกจากเคอร์เซอร์ และจุดใกล้เคอร์เซอร์เรืองแสงขึ้น
+      const dx = sx-mx, dy = sy-my, d = Math.hypot(dx,dy);
+      if (d < R){ const w = 1-d/R; const push = w*w*70/(d||1); sx += dx*push; sy += dy*push; a = Math.min(1, a*(1+w*1.6)); size *= 1+w*.6; }
+      if (disp > .001){
+        sx += o.ox*disp*220 + Math.sin(t*.8+o.p)*14*disp;
+        sy += o.oy*disp*160 + Math.cos(t*.7+o.p)*14*disp;
+        size *= 1 - .4*disp; a *= 1 - .25*disp;
+      }
+      if (sx < -size || sx > W+size || sy < -size || sy > H+size || size < .8) continue;
+      ctx.globalAlpha = o.c === 5 ? a*.5 : a;
+      ctx.drawImage(sprites[o.c], sx-size/2, sy-size/2, size, size);
+    }
+    // ฝุ่นละอองลอย
+    ctx.globalAlpha = 1;
+    for (const p of dust){
+      p.x += p.vx*dt; p.y += p.vy*dt;
+      if (p.y < -10) p.y = H+10; if (p.x < -10) p.x = W+10; if (p.x > W+10) p.x = -10;
+      ctx.globalAlpha = p.a; ctx.drawImage(sprites[4], p.x-p.r, p.y-p.r, p.r*2, p.r*2);
+    }
+  }
+
+  function start(){ if (running) return; running = true; last = performance.now(); raf = requestAnimationFrame(frame); }
+  function stop(){ running = false; cancelAnimationFrame(raf); }
+  function enter(tab){
+    L.classList.add('gone'); document.body.classList.remove('lp-on');
+    stopTimer = setTimeout(stop, 800);
+    if (tab){ const b = document.querySelector('nav button[data-tab="'+tab+'"]'); if (b) b.click(); }
+    window.scrollTo(0,0);
+  }
+  function show(){ clearTimeout(stopTimer); L.classList.remove('gone'); document.body.classList.add('lp-on'); start(); }
+
+  L.addEventListener('click', (e) => { const b = e.target.closest('[data-go]'); if (b) enter(b.dataset.go); });
+  L.addEventListener('pointermove', (e) => { mx = e.clientX; my = e.clientY; });
+  L.addEventListener('pointerleave', () => { mx = my = -9999; });
+  L.addEventListener('wheel', (e) => { boost = Math.min(4, boost + Math.abs(e.deltaY)*.004); }, { passive: true });
+  L.addEventListener('touchmove', () => { boost = Math.min(4, boost + .05); }, { passive: true });
+  // เอาเมาส์ไปชี้ปุ่มลูกศร: การเดินทางช้าลงจนหยุด ดอกไม้ลอยกระจายเป็นอนุภาค
+  const go = document.getElementById('lpGo');
+  go.addEventListener('pointerenter', () => { speedT = 0; dispT = 1; });
+  go.addEventListener('pointerleave', () => { speedT = 1; dispT = 0; });
+  document.getElementById('homeBtn').onclick = show;
+  window.addEventListener('resize', resize);
+
+  resize(); start();
+})();
+</script>
+</body>
+</html>
